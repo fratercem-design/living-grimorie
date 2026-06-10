@@ -1,0 +1,793 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=VT323&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+/* ============================================================
+   CULTCODEX — CYBER OCCULT DESIGN SYSTEM
+   ============================================================ */
+
+@theme inline {
+  /* Void Palette */
+  --color-void:        #05010a;
+  --color-void-deep:   #12001f;
+  --color-void-mid:    #1a0030;
+  --color-void-light:  #2a0050;
+
+  /* Neon Spectrum */
+  --color-magenta:     #ff00cc;
+  --color-cyan:        #00e5ff;
+  --color-pink-haze:   #ffb6e6;
+  --color-crt-blue:    #6fa8ff;
+  --color-gold:        #ffd700;
+  --color-ember:       #ff6b35;
+
+  /* Glow variants */
+  --color-magenta-dim: #cc0099;
+  --color-cyan-dim:    #00b8cc;
+
+  /* Fonts */
+  --font-orbitron:     'Orbitron', sans-serif;
+  --font-grotesk:      'Space Grotesk', sans-serif;
+  --font-vt323:        'VT323', monospace;
+  --font-mono:         'IBM Plex Mono', monospace;
+
+  /* Background & foreground */
+  --color-background:  #05010a;
+  --color-foreground:  #e8d5ff;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  scroll-behavior: smooth;
+}
+
+html, body {
+  min-height: 100%;
+  background-color: #05010a;
+  color: #e8d5ff;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #12001f;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff00cc, #00e5ff);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff00cc, #6fa8ff);
+}
+
+/* ============================================================
+   CRT OVERLAY & SCANLINES
+   ============================================================ */
+
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+  animation: scanlines 8s linear infinite;
+}
+
+.crt-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+}
+
+@keyframes scanlines {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* ============================================================
+   NOISE TEXTURE
+   ============================================================ */
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* ============================================================
+   AMBIENT PARTICLES BACKGROUND
+   ============================================================ */
+
+.void-bg {
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(18, 0, 31, 0.9) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(255, 0, 204, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(0, 229, 255, 0.05) 0%, transparent 50%),
+    #05010a;
+}
+
+/* ============================================================
+   TYPOGRAPHY SYSTEM
+   ============================================================ */
+
+.font-orbitron { font-family: 'Orbitron', sans-serif; }
+.font-vt323    { font-family: 'VT323', monospace; }
+.font-mono-ibm { font-family: 'IBM Plex Mono', monospace; }
+.font-grotesk  { font-family: 'Space Grotesk', sans-serif; }
+
+.text-grimoire {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.text-terminal {
+  font-family: 'VT323', monospace;
+  letter-spacing: 0.05em;
+}
+
+.text-codex {
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   GLOW EFFECTS
+   ============================================================ */
+
+.glow-magenta {
+  text-shadow: 0 0 10px #ff00cc, 0 0 20px #ff00cc, 0 0 40px #ff00cc66;
+}
+
+.glow-cyan {
+  text-shadow: 0 0 10px #00e5ff, 0 0 20px #00e5ff, 0 0 40px #00e5ff66;
+}
+
+.glow-gold {
+  text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700, 0 0 40px #ffd70066;
+}
+
+.glow-pink {
+  text-shadow: 0 0 10px #ffb6e6, 0 0 20px #ffb6e6;
+}
+
+.glow-border-magenta {
+  box-shadow: 0 0 10px #ff00cc44, 0 0 20px #ff00cc22, inset 0 0 10px #ff00cc11;
+  border-color: #ff00cc66;
+}
+
+.glow-border-cyan {
+  box-shadow: 0 0 10px #00e5ff44, 0 0 20px #00e5ff22, inset 0 0 10px #00e5ff11;
+  border-color: #00e5ff66;
+}
+
+.glow-border-gold {
+  box-shadow: 0 0 10px #ffd70044, 0 0 20px #ffd70022, inset 0 0 10px #ffd70011;
+  border-color: #ffd70066;
+}
+
+/* ============================================================
+   GLASSMORPHISM PANELS
+   ============================================================ */
+
+.glass-panel {
+  background: rgba(18, 0, 31, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 0, 204, 0.2);
+  border-radius: 2px;
+}
+
+.glass-panel-cyan {
+  background: rgba(0, 20, 35, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  border-radius: 2px;
+}
+
+.glass-panel-gold {
+  background: rgba(20, 15, 0, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 2px;
+}
+
+/* ============================================================
+   GRADIENT TEXT
+   ============================================================ */
+
+.gradient-magenta-cyan {
+  background: linear-gradient(135deg, #ff00cc, #00e5ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-gold-pink {
+  background: linear-gradient(135deg, #ffd700, #ffb6e6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-cyan-magenta {
+  background: linear-gradient(135deg, #00e5ff, #ff00cc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   GLITCH ANIMATION
+   ============================================================ */
+
+@keyframes glitch {
+  0%   { clip-path: inset(20% 0 60% 0); transform: translate(-3px, 0); }
+  10%  { clip-path: inset(70% 0 10% 0); transform: translate(3px, 0); }
+  20%  { clip-path: inset(40% 0 40% 0); transform: translate(-2px, 0); }
+  30%  { clip-path: inset(10% 0 80% 0); transform: translate(2px, 0); }
+  40%  { clip-path: inset(60% 0 20% 0); transform: translate(-1px, 0); }
+  50%  { clip-path: inset(30% 0 55% 0); transform: translate(1px, 0); }
+  60%  { clip-path: inset(80% 0 5%  0); transform: translate(-2px, 0); }
+  70%  { clip-path: inset(5%  0 75% 0); transform: translate(2px, 0); }
+  80%  { clip-path: inset(50% 0 30% 0); transform: translate(-1px, 0); }
+  90%  { clip-path: inset(15% 0 65% 0); transform: translate(1px, 0); }
+  100% { clip-path: inset(20% 0 60% 0); transform: translate(0, 0); }
+}
+
+.glitch-text {
+  position: relative;
+}
+
+.glitch-text::before,
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.glitch-text:hover::before {
+  color: #ff00cc;
+  opacity: 0.8;
+  animation: glitch 0.3s steps(1) infinite;
+}
+
+.glitch-text:hover::after {
+  color: #00e5ff;
+  opacity: 0.6;
+  animation: glitch 0.3s steps(1) infinite reverse;
+}
+
+/* ============================================================
+   PULSE / BREATHE ANIMATION
+   ============================================================ */
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.02); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes sigil-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes sigil-spin-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92%       { opacity: 1; }
+  93%       { opacity: 0.4; }
+  94%       { opacity: 1; }
+  96%       { opacity: 0.6; }
+  97%       { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px #ff00cc44, 0 0 20px #ff00cc22; }
+  50%       { box-shadow: 0 0 20px #ff00cc88, 0 0 40px #ff00cc44, 0 0 60px #ff00cc22; }
+}
+
+@keyframes pulse-glow-cyan {
+  0%, 100% { box-shadow: 0 0 10px #00e5ff44, 0 0 20px #00e5ff22; }
+  50%       { box-shadow: 0 0 20px #00e5ff88, 0 0 40px #00e5ff44, 0 0 60px #00e5ff22; }
+}
+
+@keyframes data-stream {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-breathe        { animation: breathe 4s ease-in-out infinite; }
+.animate-float          { animation: float 6s ease-in-out infinite; }
+.animate-sigil-spin     { animation: sigil-spin 20s linear infinite; }
+.animate-sigil-reverse  { animation: sigil-spin-reverse 15s linear infinite; }
+.animate-flicker        { animation: flicker 5s ease-in-out infinite; }
+.animate-pulse-glow     { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-pulse-glow-cyan { animation: pulse-glow-cyan 3s ease-in-out infinite; }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.btn-grimoire {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  padding: 0.75rem 2rem;
+  background: transparent;
+  border: 1px solid #ff00cc66;
+  color: #ff00cc;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+
+.btn-grimoire::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #ff00cc11, #ff00cc05);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-grimoire:hover {
+  border-color: #ff00cc;
+  color: #ffb6e6;
+  box-shadow: 0 0 20px #ff00cc44, inset 0 0 20px #ff00cc11;
+}
+
+.btn-grimoire:hover::before { opacity: 1; }
+
+.btn-cyan {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  padding: 0.75rem 2rem;
+  background: transparent;
+  border: 1px solid #00e5ff66;
+  color: #00e5ff;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+
+.btn-cyan:hover {
+  border-color: #00e5ff;
+  color: #b6f0ff;
+  box-shadow: 0 0 20px #00e5ff44, inset 0 0 20px #00e5ff11;
+}
+
+.btn-gold {
+  font-family: 'Orbitron', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.75rem;
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #ffd70022, #ff990011);
+  border: 1px solid #ffd70066;
+  color: #ffd700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+
+.btn-gold:hover {
+  border-color: #ffd700;
+  box-shadow: 0 0 20px #ffd70044, inset 0 0 20px #ffd70011;
+}
+
+/* ============================================================
+   DIVIDERS
+   ============================================================ */
+
+.divider-magenta {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ff00cc, transparent);
+}
+
+.divider-cyan {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00e5ff, transparent);
+}
+
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #ffd700, transparent);
+}
+
+/* ============================================================
+   CHAMBER CARD
+   ============================================================ */
+
+.chamber-card {
+  position: relative;
+  background: rgba(18, 0, 31, 0.6);
+  border: 1px solid rgba(255, 0, 204, 0.15);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.chamber-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 0, 204, 0.05), rgba(0, 229, 255, 0.05));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.chamber-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff00cc, #00e5ff, transparent);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.chamber-card:hover {
+  border-color: rgba(255, 0, 204, 0.4);
+  box-shadow: 0 0 30px #ff00cc22, 0 0 60px #ff00cc11;
+  transform: translateY(-4px);
+}
+
+.chamber-card:hover::before { opacity: 1; }
+.chamber-card:hover::after  { transform: scaleX(1); }
+
+/* ============================================================
+   INPUT FIELDS
+   ============================================================ */
+
+.input-grimoire {
+  background: rgba(18, 0, 31, 0.8);
+  border: 1px solid rgba(255, 0, 204, 0.3);
+  color: #e8d5ff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.input-grimoire::placeholder {
+  color: rgba(255, 0, 204, 0.3);
+}
+
+.input-grimoire:focus {
+  border-color: #ff00cc88;
+  box-shadow: 0 0 15px #ff00cc22, inset 0 0 10px #ff00cc08;
+}
+
+.textarea-grimoire {
+  background: rgba(18, 0, 31, 0.8);
+  border: 1px solid rgba(255, 0, 204, 0.3);
+  color: #e8d5ff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: all 0.3s ease;
+  width: 100%;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.textarea-grimoire:focus {
+  border-color: #ff00cc88;
+  box-shadow: 0 0 15px #ff00cc22, inset 0 0 10px #ff00cc08;
+}
+
+/* ============================================================
+   TAGS & BADGES
+   ============================================================ */
+
+.tag-magenta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #ff00cc44;
+  color: #ff00cc;
+  background: rgba(255, 0, 204, 0.08);
+}
+
+.tag-cyan {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #00e5ff44;
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.tag-gold {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #ffd70044;
+  color: #ffd700;
+  background: rgba(255, 215, 0, 0.08);
+}
+
+/* ============================================================
+   PROGRESS BAR
+   ============================================================ */
+
+.progress-grimoire {
+  height: 4px;
+  background: rgba(255, 0, 204, 0.1);
+  overflow: hidden;
+}
+
+.progress-grimoire-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff00cc, #00e5ff);
+  box-shadow: 0 0 8px #ff00cc88;
+  transition: width 1s ease;
+}
+
+/* ============================================================
+   TAROT CARD
+   ============================================================ */
+
+.tarot-card {
+  position: relative;
+  aspect-ratio: 2/3.5;
+  background: linear-gradient(160deg, #12001f, #1a0030, #05010a);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.4s ease;
+  transform-style: preserve-3d;
+}
+
+.tarot-card:hover {
+  border-color: rgba(255, 215, 0, 0.7);
+  box-shadow: 0 0 30px #ffd70033, 0 10px 40px rgba(0,0,0,0.5);
+  transform: translateY(-8px) rotateY(5deg);
+}
+
+.tarot-card-back {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================
+   ORACLE CHAT BUBBLE
+   ============================================================ */
+
+.oracle-bubble {
+  background: rgba(18, 0, 31, 0.9);
+  border-left: 2px solid #ff00cc;
+  padding: 1rem 1.25rem;
+  font-family: 'Space Grotesk', sans-serif;
+  line-height: 1.7;
+  position: relative;
+}
+
+.oracle-bubble::before {
+  content: '◈';
+  position: absolute;
+  left: -0.8rem;
+  top: 1rem;
+  color: #ff00cc;
+  font-size: 0.7rem;
+}
+
+.user-bubble {
+  background: rgba(0, 20, 35, 0.9);
+  border-left: 2px solid #00e5ff;
+  padding: 1rem 1.25rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   SYMBOL NODE
+   ============================================================ */
+
+.symbol-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.symbol-node::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: linear-gradient(#05010a, #05010a) padding-box,
+              linear-gradient(135deg, #ff00cc, #00e5ff) border-box;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.symbol-node:hover::after { opacity: 1; }
+
+/* ============================================================
+   AKASHIC LINK
+   ============================================================ */
+
+.akashic-link {
+  color: #00e5ff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85em;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(0, 229, 255, 0.3);
+  transition: all 0.2s ease;
+  padding-bottom: 1px;
+}
+
+.akashic-link:hover {
+  color: #ffb6e6;
+  border-bottom-color: #ffb6e6;
+  text-shadow: 0 0 8px #ffb6e680;
+}
+
+/* ============================================================
+   STAR FIELD BACKGROUND
+   ============================================================ */
+
+.star-field {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  border-radius: 50%;
+  animation: twinkle var(--duration, 4s) ease-in-out infinite var(--delay, 0s);
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: var(--min-opacity, 0.1); }
+  50%       { opacity: var(--max-opacity, 0.8); }
+}
+
+/* ============================================================
+   LOADING / RITUAL SPINNER
+   ============================================================ */
+
+.ritual-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.ritual-spinner::before,
+.ritual-spinner::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.ritual-spinner::before {
+  inset: 0;
+  border-top-color: #ff00cc;
+  border-right-color: #ff00cc;
+  animation: sigil-spin 1s linear infinite;
+}
+
+.ritual-spinner::after {
+  inset: 6px;
+  border-bottom-color: #00e5ff;
+  border-left-color: #00e5ff;
+  animation: sigil-spin-reverse 0.8s linear infinite;
+}
+
+/* ============================================================
+   SELECTION
+   ============================================================ */
+
+::selection {
+  background: rgba(255, 0, 204, 0.3);
+  color: #ffb6e6;
+}
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+
+.tooltip-grimoire {
+  background: rgba(18, 0, 31, 0.95);
+  border: 1px solid rgba(255, 0, 204, 0.4);
+  color: #e8d5ff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  box-shadow: 0 0 15px #ff00cc22;
+}
+
+/* ============================================================
+   RESPONSIVE HELPERS
+   ============================================================ */
+
+.container-grimoire {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .container-grimoire { padding: 0 2rem; }
+}
+
+@media (min-width: 1280px) {
+  .container-grimoire { padding: 0 3rem; }
+}
