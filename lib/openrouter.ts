@@ -48,8 +48,9 @@ export async function completeWithFallback(messages: ChatMessage[]): Promise<Com
           messages,
           max_tokens: 1600, // reasoning models spend hidden tokens before answering
           temperature: 0.9,
-          // keep chain-of-thought out of the answer on reasoning models
-          reasoning: { exclude: true },
+          // disable chain-of-thought entirely — reasoning models otherwise
+          // sometimes leak their planning into the answer text
+          reasoning: { enabled: false, exclude: true },
         }),
       });
 
