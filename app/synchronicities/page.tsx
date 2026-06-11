@@ -1,9 +1,32 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 
 type SyncCategory = 'animal' | 'number' | 'person' | 'dream' | 'object' | 'event' | 'color' | 'word';
+
+type PatternCard = {
+  id: number;
+  title: string;
+  category: string;
+  count: number;
+  description: string;
+  date: string;
+  symbol: string;
+  intensity: string;
+};
+
+type SyncStats = { total: number; today: number; patterns: number; categories: number };
+
+function formatRelative(iso: string): string {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 60) return mins <= 1 ? 'just now' : `${mins} minutes ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+  return `${Math.floor(days / 7)} week${days >= 14 ? 's' : ''} ago`;
+}
 
 const SAMPLE_SYNCS = [
   { id: 1, title: 'Crow before the change', category: 'animal', count: 23, description: 'Seeing crows in unusual circumstances before significant life transitions', date: '2 days ago', symbol: '🐦‍⬛', intensity: 'high' },
@@ -28,15 +51,57 @@ export default function SynchronicitiesPage() {
   const [view, setView] = useState<'report' | 'patterns' | 'map'>('patterns');
   const [formData, setFormData] = useState({ title: '', description: '', category: 'event' as SyncCategory, date: '', emotion: '', question: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [selectedSync, setSelectedSync] = useState<typeof SAMPLE_SYNCS[0] | null>(null);
+  const [selectedSync, setSelectedSync] = useState<PatternCard | null>(null);
+  const [livePatterns, setLivePatterns] = useState<PatternCard[] | null>(null);
+  const [liveStats, setLiveStats] = useState<SyncStats | null>(null);
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.description) return;
+  const refreshPatterns = useCallback(async () => {
+    try {
+      const res = await fetch('/api/syncs');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.patterns) && data.patterns.length > 0) {
+        type Row = { pattern: string; category: string; description: string; symbol: string; intensity: string; count: number; latest: string };
+        setLivePatterns((data.patterns as Row[]).map((p, i) => ({
+          id: i + 1,
+          title: p.pattern,
+          category: p.category,
+          count: p.count,
+          description: p.description,
+          date: formatRelative(p.latest),
+          symbol: p.symbol,
+          intensity: p.intensity,
+        })));
+      }
+      if (data.stats) setLiveStats(data.stats);
+    } catch {
+      // DB unreachable — patterns fall back to samples
+    }
+  }, []);
+
+  useEffect(() => { refreshPatterns(); }, [refreshPatterns]);
+
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.description || submitting) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/syncs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      refreshPatterns(); // pull the new report into patterns + ticker
+    } catch {
+      // best-effort — the archive screen shows regardless
+    }
+    setSubmitting(false);
     setSubmitted(true);
   };
 
-  const filtered = filterCategory === 'all' ? SAMPLE_SYNCS : SAMPLE_SYNCS.filter(s => s.category === filterCategory);
+  const activePatterns = livePatterns ?? SAMPLE_SYNCS;
+  const filtered = filterCategory === 'all' ? activePatterns : activePatterns.filter(s => s.category === filterCategory);
 
   return (
     <main className="min-h-screen pt-8 pb-24">
@@ -66,7 +131,7 @@ export default function SynchronicitiesPage() {
             style={{ background: 'linear-gradient(270deg, #05010a, transparent)' }} />
           <motion.div className="flex gap-8 whitespace-nowrap"
             animate={{ x: [0, -800] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}>
-            {[...SAMPLE_SYNCS, ...SAMPLE_SYNCS].map((s, i) => (
+            {[...activePatterns, ...activePatterns].map((s, i) => (
               <span key={i} className="font-mono-ibm text-xs text-pink-haze/60">
                 {s.symbol} {s.title} — {s.count} reports
               </span>
@@ -95,10 +160,10 @@ export default function SynchronicitiesPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               {[
-                { label: 'Reports Today', value: '127', delta: '+23%', color: '#ff00cc' },
-                { label: 'Active Patterns', value: '34', delta: '+5 new', color: '#ffb6e6' },
-                { label: 'Global Contributors', value: '8,421', delta: 'worldwide', color: '#6fa8ff' },
-                { label: 'Pattern Matches', value: '2.1M', delta: 'cross-linked', color: '#ffd700' },
+                { label: 'Reports Today', value: liveStats ? liveStats.today.toLocaleString() : '—', delta: 'last 24h', color: '#ff00cc' },
+                { label: 'Active Patterns', value: liveStats ? liveStats.patterns.toLocaleString() : '—', delta: 'clustered', color: '#ffb6e6' },
+                { label: 'Total Reports', value: liveStats ? liveStats.total.toLocaleString() : '—', delta: 'all time', color: '#6fa8ff' },
+                { label: 'Categories Active', value: liveStats ? liveStats.categories.toLocaleString() : '—', delta: 'of 8', color: '#ffd700' },
               ].map(s => (
                 <div key={s.label} className="glass-panel p-4 text-center"
                   style={{ borderColor: `${s.color}33` }}>
@@ -257,11 +322,11 @@ export default function SynchronicitiesPage() {
 
                   <div className="pt-4 text-center">
                     <motion.button onClick={handleSubmit}
-                      disabled={!formData.title || !formData.description}
+                      disabled={!formData.title || !formData.description || submitting}
                       className="px-10 py-4 font-orbitron text-xs uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed border transition-all duration-300"
                       style={{ borderColor: 'rgba(255,182,230,0.6)', color: '#ffb6e6', background: 'rgba(255,182,230,0.08)' }}
                       whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      ✨ Submit to the Archive
+                      {submitting ? '◌ The pattern engine listens...' : '✨ Submit to the Archive'}
                     </motion.button>
                   </div>
                 </div>
