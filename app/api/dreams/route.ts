@@ -4,12 +4,27 @@ import { getDb } from '@/lib/db';
 import { dreams } from '@/lib/db/schema';
 import { completeWithFallback } from '@/lib/openrouter';
 import { awardPoints } from '@/lib/points';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
+import { auth } from '@/lib/auth';
 
 export async function GET() {
   try {
     const db = getDb();
     const [rows, stats] = await Promise.all([
-      db.select().from(dreams).orderBy(desc(dreams.createdAt)).limit(24),
+      // explicit columns — userId stays private
+      db
+        .select({
+          id: dreams.id,
+          title: dreams.title,
+          dream: dreams.dream,
+          emotions: dreams.emotions,
+          symbols: dreams.symbols,
+          archetype: dreams.archetype,
+          createdAt: dreams.createdAt,
+        })
+        .from(dreams)
+        .orderBy(desc(dreams.createdAt))
+        .limit(24),
       db
         .select({
           total: sql<number>`count(*)::int`,
@@ -56,6 +71,8 @@ async function extractMetadata(dream: string): Promise<{ symbols: string[]; arch
 }
 
 export async function POST(request: Request) {
+  if (!rateLimit(request, 'dreams-post', 6, 600_000)) return rateLimitResponse();
+
   let body: { title?: string; dream?: string; emotions?: string };
   try {
     body = await request.json();
@@ -75,12 +92,17 @@ export async function POST(request: Request) {
   const emotions = typeof body.emotions === 'string' ? body.emotions.trim().slice(0, 300) : '';
 
   const meta = await extractMetadata(dreamText);
+  const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
 
   try {
     const db = getDb();
     const [row] = await db
       .insert(dreams)
-      .values({ title, dream: dreamText, emotions, symbols: meta.symbols, archetype: meta.archetype })
+      .values({
+        title, dream: dreamText, emotions,
+        symbols: meta.symbols, archetype: meta.archetype,
+        userId: session?.user?.id ?? null,
+      })
       .returning();
     await awardPoints(request.headers, 'Submit a dream', 30);
     return NextResponse.json({ dream: row });

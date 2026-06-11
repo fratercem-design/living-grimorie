@@ -48,7 +48,7 @@ export function Navigation() {
                 The Living Grimoire
               </div>
               <div className="font-vt323 text-xs text-pink-haze/50 tracking-widest -mt-1">
-                THE LIVING GRIMOIRE
+                THE ARCHIVE REMEMBERS
               </div>
             </div>
           </Link>

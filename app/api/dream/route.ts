@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { completeWithFallback } from '@/lib/openrouter';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 const LAYER_PROMPTS: Record<string, string> = {
   jungian: `You are a master Jungian analyst interpreting a dream. Draw on Jung's mature work — the collective unconscious, archetypes, the Shadow, anima/animus, complexes, and the individuation process. Identify the specific archetypal forces active in THIS dream's actual imagery — never generic boilerplate. Treat the dream as a communication from the unconscious compensating the conscious attitude. End with one penetrating question the dreamer should sit with.`,
@@ -10,6 +11,8 @@ const LAYER_PROMPTS: Record<string, string> = {
 };
 
 export async function POST(request: Request) {
+  if (!rateLimit(request, 'dream', 12, 60_000)) return rateLimitResponse();
+
   let body: { layer?: string; title?: string; dream?: string; emotions?: string };
   try {
     body = await request.json();

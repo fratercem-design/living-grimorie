@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { ORACLE_PERSONAS } from '@/lib/data/oracles';
 import { completeWithFallback } from '@/lib/openrouter';
 import { awardPoints } from '@/lib/points';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
 export async function POST(request: Request) {
+  if (!rateLimit(request, 'oracle', 15, 60_000)) return rateLimitResponse();
+
   let body: { oracleId?: string; messages?: ChatMessage[] };
   try {
     body = await request.json();

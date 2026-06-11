@@ -4,6 +4,8 @@ import { getDb } from '@/lib/db';
 import { syncs } from '@/lib/db/schema';
 import { completeWithFallback } from '@/lib/openrouter';
 import { awardPoints } from '@/lib/points';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
+import { auth } from '@/lib/auth';
 
 const CATEGORIES = ['animal', 'number', 'person', 'dream', 'object', 'event', 'color', 'word'];
 const INTENSITIES = ['low', 'medium', 'high', 'extreme'];
@@ -101,6 +103,8 @@ async function classify(
 }
 
 export async function POST(request: Request) {
+  if (!rateLimit(request, 'syncs-post', 6, 600_000)) return rateLimitResponse();
+
   let body: { title?: string; description?: string; category?: string; emotion?: string; question?: string };
   try {
     body = await request.json();
@@ -118,12 +122,13 @@ export async function POST(request: Request) {
   const question = typeof body.question === 'string' ? body.question.trim().slice(0, 300) : '';
 
   const meta = await classify(title, description, category);
+  const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
 
   try {
     const db = getDb();
     const [row] = await db
       .insert(syncs)
-      .values({ title, description, category, emotion, question, ...meta })
+      .values({ title, description, category, emotion, question, ...meta, userId: session?.user?.id ?? null })
       .returning();
     await awardPoints(request.headers, 'Record a synchronicity', 40);
     return NextResponse.json({ sync: row });

@@ -9,6 +9,7 @@ export const dreams = pgTable('dreams', {
   emotions: varchar('emotions', { length: 300 }).default('').notNull(),
   symbols: jsonb('symbols').$type<string[]>().default([]).notNull(),
   archetype: varchar('archetype', { length: 120 }).default('Unnamed').notNull(),
+  userId: text('user_id'), // author when signed in; null for anonymous seekers
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
@@ -26,6 +27,7 @@ export const syncs = pgTable('syncs', {
   pattern: varchar('pattern', { length: 120 }).notNull(),
   symbol: varchar('symbol', { length: 16 }).default('✨').notNull(),
   intensity: varchar('intensity', { length: 10 }).default('medium').notNull(),
+  userId: text('user_id'), // author when signed in; null for anonymous seekers
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
 

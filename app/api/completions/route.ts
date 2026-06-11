@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { completions, pointsLedger } from '@/lib/db/auth-schema';
 import { INITIATION_LEVELS } from '@/lib/data/initiation';
+import { rateLimit, rateLimitResponse } from '@/lib/rate-limit';
 
 // Valid item ids straight from the curriculum data
 const LESSON_IDS = new Set<string>();
@@ -36,6 +37,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!rateLimit(request, 'completions-post', 20, 60_000)) return rateLimitResponse();
+
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Enter the Sanctum to record your progress' }, { status: 401 });

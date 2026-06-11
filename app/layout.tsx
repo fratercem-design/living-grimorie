@@ -2,13 +2,23 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'The Living Grimoire',
+  metadataBase: new URL(process.env.BETTER_AUTH_URL ?? 'https://living-grimorie-production.up.railway.app'),
+  title: {
+    default: 'The Living Grimoire',
+    template: '%s — The Living Grimoire',
+  },
   description: 'A constantly evolving digital grimoire. Explore hidden knowledge through initiation, symbolism, divination, AI interaction, and discovery.',
   keywords: 'occult, grimoire, tarot, alchemy, kabbalah, divination, mysticism, esoteric',
   openGraph: {
     title: 'The Living Grimoire',
     description: 'Enter the digital grimoire. Seven chambers await.',
     type: 'website',
+    siteName: 'The Living Grimoire',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'The Living Grimoire',
+    description: 'Enter the digital grimoire. Seven chambers await.',
   },
 };
 
