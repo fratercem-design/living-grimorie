@@ -64,11 +64,45 @@ export default function DreamsPage() {
   const [activeLayer, setActiveLayer] = useState<AnalysisLayer>('jungian');
   const [activeAtlasId, setActiveAtlasId] = useState<number | null>(null);
   const [view, setView] = useState<'submit' | 'atlas'>('submit');
+  const [analyses, setAnalyses] = useState<Partial<Record<AnalysisLayer, string>>>({});
+  const [layerLoading, setLayerLoading] = useState(false);
 
-  const analyzeDream = () => {
+  const fetchLayer = async (layer: AnalysisLayer, dream: string): Promise<string> => {
+    try {
+      const res = await fetch('/api/dream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ layer, title, dream, emotions }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.content === 'string' && data.content.trim() !== '') {
+          return data.content;
+        }
+      }
+    } catch {
+      // network failure — fall through to template
+    }
+    return ANALYSIS_TEMPLATES[layer](dream);
+  };
+
+  const analyzeDream = async () => {
     if (!dreamText.trim()) return;
     setAnalysisState('analyzing');
-    setTimeout(() => setAnalysisState('complete'), 3000);
+    setAnalyses({});
+    setActiveLayer('jungian');
+    const content = await fetchLayer('jungian', dreamText);
+    setAnalyses({ jungian: content });
+    setAnalysisState('complete');
+  };
+
+  const selectLayer = async (layer: AnalysisLayer) => {
+    setActiveLayer(layer);
+    if (analyses[layer] || layerLoading) return;
+    setLayerLoading(true);
+    const content = await fetchLayer(layer, dreamText);
+    setAnalyses(prev => ({ ...prev, [layer]: content }));
+    setLayerLoading(false);
   };
 
   const LAYERS: { id: AnalysisLayer; label: string; color: string }[] = [
@@ -191,7 +225,7 @@ export default function DreamsPage() {
                 {/* Layer selector */}
                 <div className="flex flex-wrap justify-center gap-2 mb-6">
                   {LAYERS.map(layer => (
-                    <button key={layer.id} onClick={() => setActiveLayer(layer.id)}
+                    <button key={layer.id} onClick={() => selectLayer(layer.id)}
                       className={`px-4 py-2 font-orbitron text-xs uppercase tracking-widest transition-all duration-300 ${
                         activeLayer === layer.id
                           ? 'border text-foreground'
@@ -219,9 +253,19 @@ export default function DreamsPage() {
                       style={{ color: LAYERS.find(l => l.id === activeLayer)?.color }}>
                       {activeLayer.charAt(0).toUpperCase() + activeLayer.slice(1)} Analysis
                     </div>
-                    <div className="font-grotesk text-sm text-foreground/75 leading-relaxed whitespace-pre-line">
-                      {ANALYSIS_TEMPLATES[activeLayer](dreamText)}
-                    </div>
+                    {layerLoading && !analyses[activeLayer] ? (
+                      <div className="flex flex-col items-center py-10">
+                        <div className="ritual-spinner mb-4" />
+                        <div className="font-vt323 text-sm tracking-widest animate-flicker"
+                          style={{ color: LAYERS.find(l => l.id === activeLayer)?.color }}>
+                          The Oracle turns the {activeLayer} lens upon your dream...
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="font-grotesk text-sm text-foreground/75 leading-relaxed whitespace-pre-line">
+                        {analyses[activeLayer] ?? ANALYSIS_TEMPLATES[activeLayer](dreamText)}
+                      </div>
+                    )}
                   </motion.div>
                 </AnimatePresence>
 
