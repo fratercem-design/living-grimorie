@@ -12,20 +12,54 @@ export default function InitiationPage() {
     rank: 0, points: 0, next: 300, signedIn: false,
   });
 
+  const [completed, setCompleted] = useState<Set<string>>(new Set());
+  const [marking, setMarking] = useState(false);
+
+  const refreshProgress = async () => {
+    try {
+      const res = await fetch('/api/me');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.user) {
+        setProgress({ rank: data.rank ?? 0, points: data.points ?? 0, next: data.nextThreshold ?? null, signedIn: true });
+      }
+    } catch {
+      // guest view stays at Seeker / 0 AP
+    }
+  };
+
   useEffect(() => {
+    refreshProgress();
     (async () => {
       try {
-        const res = await fetch('/api/me');
+        const res = await fetch('/api/completions');
         if (!res.ok) return;
         const data = await res.json();
-        if (data.user) {
-          setProgress({ rank: data.rank ?? 0, points: data.points ?? 0, next: data.nextThreshold ?? null, signedIn: true });
-        }
+        if (Array.isArray(data.completed)) setCompleted(new Set(data.completed));
       } catch {
-        // guest view stays at Seeker / 0 AP
+        // completions stay empty for guests
       }
     })();
   }, []);
+
+  const markComplete = async (itemId: string, kind: 'lesson' | 'quest') => {
+    if (marking || completed.has(itemId)) return;
+    setMarking(true);
+    try {
+      const res = await fetch('/api/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId, kind }),
+      });
+      if (res.ok) {
+        setCompleted(prev => new Set([...prev, itemId]));
+        refreshProgress(); // AP and possibly rank just changed
+      }
+    } catch {
+      // leave the button active to retry
+    }
+    setMarking(false);
+  };
 
   const CURRENT_LEVEL = progress.rank;
   const CURRENT_XP = progress.points;
@@ -272,14 +306,41 @@ export default function InitiationPage() {
                           <div className="font-mono-ibm text-xs text-gold/60 uppercase tracking-wider mb-1">Task</div>
                           <p className="font-grotesk text-sm text-foreground/80">{activeLesson.quest.task}</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mb-4">
                           <span className="font-mono-ibm text-xs text-gold/60">Reward:</span>
                           <span className="tag-gold text-xs">{activeLesson.quest.reward}</span>
                         </div>
+                        {progress.signedIn && (
+                          completed.has(activeLesson.quest.id) ? (
+                            <div className="font-orbitron text-xs uppercase tracking-widest text-gold/60">
+                              ◈ Quest Fulfilled (+75 AP earned)
+                            </div>
+                          ) : (
+                            <button onClick={() => markComplete(activeLesson.quest!.id, 'quest')}
+                              disabled={marking}
+                              className="btn-gold text-xs px-5 py-2.5 disabled:opacity-40">
+                              ◈ I Have Fulfilled This Quest (+75 AP)
+                            </button>
+                          )
+                        )}
                       </div>
                     )}
                     <div className="flex gap-4 mt-6">
-                      <button className="btn-gold flex-1">✓ Mark Complete (+25 AP)</button>
+                      {!progress.signedIn ? (
+                        <Link href="/sanctum" className="flex-1">
+                          <button className="btn-gold w-full">🗝 Enter the Sanctum to Record Progress</button>
+                        </Link>
+                      ) : completed.has(activeLesson.id) ? (
+                        <button disabled className="btn-gold flex-1 opacity-50 cursor-default">
+                          ✓ Lesson Completed (+25 AP earned)
+                        </button>
+                      ) : (
+                        <button onClick={() => markComplete(activeLesson.id, 'lesson')}
+                          disabled={marking}
+                          className="btn-gold flex-1 disabled:opacity-40">
+                          {marking ? '◌ Recording...' : '✓ Mark Complete (+25 AP)'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -308,7 +369,11 @@ export default function InitiationPage() {
                               </p>
                             </div>
                             <div className="flex-shrink-0 ml-4">
-                              <div className="font-orbitron text-xs text-gold/40">→</div>
+                              {completed.has(lesson.id) ? (
+                                <div className="font-orbitron text-xs text-gold">✓</div>
+                              ) : (
+                                <div className="font-orbitron text-xs text-gold/40">→</div>
+                              )}
                             </div>
                           </div>
                           {lesson.quest && (

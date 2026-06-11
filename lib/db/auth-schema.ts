@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, serial, varchar, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, serial, varchar, integer, uniqueIndex } from 'drizzle-orm/pg-core';
 
 // Better Auth core tables — shape per the drizzle adapter contract
 export const user = pgTable('user', {
@@ -55,3 +55,16 @@ export const pointsLedger = pgTable('points_ledger', {
   points: integer('points').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Lesson and quest completions — one row per user per item, ever
+export const completions = pgTable(
+  'completions',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    itemId: varchar('item_id', { length: 80 }).notNull(),
+    kind: varchar('kind', { length: 10 }).notNull(), // 'lesson' | 'quest'
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  t => [uniqueIndex('completions_user_item_unique').on(t.userId, t.itemId)],
+);
