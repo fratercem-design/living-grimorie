@@ -68,17 +68,42 @@ export default function OraclesPage() {
     if (!input.trim() || !selectedOracle || isTyping) return;
 
     const userMsg: Message = { role: 'user', content: input, timestamp: new Date() };
-    setMessages(prev => [...prev, userMsg]);
+    const history = [...messages, userMsg];
+    setMessages(history);
     setInput('');
     setIsTyping(true);
 
-    await new Promise(r => setTimeout(r, 1500 + Math.random() * 1500));
+    let response: string | null = null;
+    try {
+      const res = await fetch('/api/oracle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          oracleId: selectedOracle.id,
+          // skip the scripted greeting; map oracle → assistant for the API
+          messages: history.slice(1).map(m => ({
+            role: m.role === 'oracle' ? 'assistant' : 'user',
+            content: m.content,
+          })),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.content === 'string' && data.content.trim() !== '') {
+          response = data.content;
+        }
+      }
+    } catch {
+      // network failure — fall through to simulated response
+    }
 
-    const responses = SIMULATED_RESPONSES[selectedOracle.id] || SIMULATED_RESPONSES['hermes'];
-    const idx = (responseIndex[selectedOracle.id] || 0) % responses.length;
-    const response = responses[idx];
+    if (response === null) {
+      const responses = SIMULATED_RESPONSES[selectedOracle.id] || SIMULATED_RESPONSES['hermes'];
+      const idx = (responseIndex[selectedOracle.id] || 0) % responses.length;
+      response = responses[idx];
+      setResponseIndex(prev => ({ ...prev, [selectedOracle.id]: idx + 1 }));
+    }
 
-    setResponseIndex(prev => ({ ...prev, [selectedOracle.id]: idx + 1 }));
     setMessages(prev => [...prev, { role: 'oracle', content: response, timestamp: new Date() }]);
     setIsTyping(false);
   };
@@ -262,7 +287,7 @@ export default function OraclesPage() {
                     </motion.button>
                   </div>
                   <div className="font-mono-ibm text-xs text-foreground/20 mt-2">
-                    Press Enter to send · Oracle responses are demonstrative
+                    Press Enter to send · The oracles speak through living channels
                   </div>
                 </div>
               </div>

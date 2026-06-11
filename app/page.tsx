@@ -25,16 +25,20 @@ export default function HomePage() {
   const [currentGlyph, setCurrentGlyph] = useState(0);
 
   useEffect(() => {
-    let i = 0;
+    let done = false;
     const interval = setInterval(() => {
-      if (i < BOOT_LINES.length) {
-        setBootLines((prev) => [...prev, BOOT_LINES[i]]);
-        i++;
-      } else {
-        clearInterval(interval);
-        setTimeout(() => setBooted(true), 600);
-        setTimeout(() => setShowEntrance(true), 1200);
-      }
+      setBootLines((prev) => {
+        if (prev.length < BOOT_LINES.length) {
+          return [...prev, BOOT_LINES[prev.length]];
+        }
+        if (!done) {
+          done = true;
+          clearInterval(interval);
+          setTimeout(() => setBooted(true), 600);
+          setTimeout(() => setShowEntrance(true), 1200);
+        }
+        return prev;
+      });
     }, 280);
     return () => clearInterval(interval);
   }, []);
