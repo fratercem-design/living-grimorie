@@ -3,6 +3,7 @@ import { desc, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db';
 import { dreams } from '@/lib/db/schema';
 import { completeWithFallback } from '@/lib/openrouter';
+import { awardPoints } from '@/lib/points';
 
 export async function GET() {
   try {
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
       .insert(dreams)
       .values({ title, dream: dreamText, emotions, symbols: meta.symbols, archetype: meta.archetype })
       .returning();
+    await awardPoints(request.headers, 'Submit a dream', 30);
     return NextResponse.json({ dream: row });
   } catch (err) {
     return NextResponse.json(

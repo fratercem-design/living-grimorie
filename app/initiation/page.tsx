@@ -1,17 +1,35 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { INITIATION_LEVELS, AKASHIC_POINT_ACTIONS, type InitiationLevel, type Lesson } from '@/lib/data/initiation';
 import Link from 'next/link';
 
-const CURRENT_LEVEL = 0; // Seeker — would come from user session in real app
-const CURRENT_XP = 75;
-const NEXT_LEVEL_XP = 200;
-
 export default function InitiationPage() {
-  const [activeLevel, setActiveLevel] = useState<InitiationLevel>(INITIATION_LEVELS[CURRENT_LEVEL]);
+  const [activeLevel, setActiveLevel] = useState<InitiationLevel>(INITIATION_LEVELS[0]);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [view, setView] = useState<'path' | 'lessons' | 'points'>('path');
+  const [progress, setProgress] = useState<{ rank: number; points: number; next: number | null; signedIn: boolean }>({
+    rank: 0, points: 0, next: 300, signedIn: false,
+  });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/me');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.user) {
+          setProgress({ rank: data.rank ?? 0, points: data.points ?? 0, next: data.nextThreshold ?? null, signedIn: true });
+        }
+      } catch {
+        // guest view stays at Seeker / 0 AP
+      }
+    })();
+  }, []);
+
+  const CURRENT_LEVEL = progress.rank;
+  const CURRENT_XP = progress.points;
+  const NEXT_LEVEL_XP = progress.next ?? progress.points;
 
   const LEVEL_COLORS: Record<string, string> = {
     seeker: '#e8d5ff', adept: '#00e5ff', magician: '#ff00cc',
@@ -61,18 +79,29 @@ export default function InitiationPage() {
               <div className="font-mono-ibm text-xs text-foreground/40">Akashic Points</div>
             </div>
           </div>
-          <div className="space-y-1">
-            <div className="flex justify-between font-mono-ibm text-xs text-foreground/40">
-              <span>Progress to {INITIATION_LEVELS[CURRENT_LEVEL + 1].name}</span>
-              <span>{CURRENT_XP}/{NEXT_LEVEL_XP} AP</span>
+          {INITIATION_LEVELS[CURRENT_LEVEL + 1] && progress.next !== null && (
+            <div className="space-y-1">
+              <div className="flex justify-between font-mono-ibm text-xs text-foreground/40">
+                <span>Progress to {INITIATION_LEVELS[CURRENT_LEVEL + 1].name}</span>
+                <span>{CURRENT_XP}/{NEXT_LEVEL_XP} AP</span>
+              </div>
+              <div className="progress-grimoire">
+                <motion.div className="progress-grimoire-fill"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, (CURRENT_XP / Math.max(1, NEXT_LEVEL_XP)) * 100)}%` }}
+                  transition={{ duration: 1.5, ease: 'easeOut' }} />
+              </div>
             </div>
-            <div className="progress-grimoire">
-              <motion.div className="progress-grimoire-fill"
-                initial={{ width: 0 }}
-                animate={{ width: `${(CURRENT_XP / NEXT_LEVEL_XP) * 100}%` }}
-                transition={{ duration: 1.5, ease: 'easeOut' }} />
+          )}
+          {!progress.signedIn && (
+            <div className="mt-3 font-mono-ibm text-xs text-foreground/40">
+              Your steps on the path are not yet being recorded —{' '}
+              <Link href="/sanctum" className="text-gold hover:text-gold/80 transition-colors">
+                🗝 enter the Sanctum
+              </Link>{' '}
+              to bind your progress to your name.
             </div>
-          </div>
+          )}
         </div>
 
         {/* Tab Nav */}

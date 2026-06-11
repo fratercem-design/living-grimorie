@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ORACLE_PERSONAS } from '@/lib/data/oracles';
 import { completeWithFallback } from '@/lib/openrouter';
+import { awardPoints } from '@/lib/points';
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -35,6 +36,11 @@ export async function POST(request: Request) {
       { error: 'All oracle channels are exhausted', details: result.errors },
       { status: 503 },
     );
+  }
+
+  // award only on the first exchange of a conversation, not every message
+  if (history.length <= 1) {
+    await awardPoints(request.headers, 'Consult an Oracle persona', 15);
   }
 
   return NextResponse.json({ content: result.content, model: result.model });

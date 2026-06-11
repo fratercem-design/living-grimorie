@@ -3,6 +3,7 @@ import { desc, sql } from 'drizzle-orm';
 import { getDb } from '@/lib/db';
 import { syncs } from '@/lib/db/schema';
 import { completeWithFallback } from '@/lib/openrouter';
+import { awardPoints } from '@/lib/points';
 
 const CATEGORIES = ['animal', 'number', 'person', 'dream', 'object', 'event', 'color', 'word'];
 const INTENSITIES = ['low', 'medium', 'high', 'extreme'];
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
       .insert(syncs)
       .values({ title, description, category, emotion, question, ...meta })
       .returning();
+    await awardPoints(request.headers, 'Record a synchronicity', 40);
     return NextResponse.json({ sync: row });
   } catch (err) {
     return NextResponse.json(

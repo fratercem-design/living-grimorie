@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useSession } from '@/lib/auth-client';
 
 const NAV_LINKS = [
   { href: '/chambers', label: 'The Chambers', sigil: '⬡' },
@@ -20,6 +21,8 @@ const NAV_LINKS = [
 export function Navigation() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session } = useSession();
+  const sanctumLabel = session?.user?.name ? session.user.name.split(' ')[0] : 'Sanctum';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -59,6 +62,8 @@ export function Navigation() {
             {NAV_LINKS.slice(5).map((link) => (
               <NavLink key={link.href} {...link} active={pathname === link.href} />
             ))}
+            <div className="w-px h-5 bg-magenta/20 mx-2" />
+            <NavLink href="/sanctum" label={sanctumLabel} sigil="🗝" active={pathname === '/sanctum'} />
           </div>
 
           {/* Mobile toggle */}
@@ -85,7 +90,7 @@ export function Navigation() {
             }}
           >
             <div className="container-grimoire py-4 grid grid-cols-2 gap-2">
-              {NAV_LINKS.map((link) => (
+              {[...NAV_LINKS, { href: '/sanctum', label: sanctumLabel, sigil: '🗝' }].map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}

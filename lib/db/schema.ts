@@ -1,5 +1,7 @@
 import { pgTable, serial, text, varchar, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
+export * from './auth-schema';
+
 export const dreams = pgTable('dreams', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 200 }).notNull(),
