@@ -1,9 +1,30 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 type AnalysisLayer = 'jungian' | 'alchemical' | 'kabbalistic' | 'mythological' | 'tarot';
+
+type AtlasCard = {
+  id: number;
+  title: string;
+  date: string;
+  symbols: string[];
+  archetype: string;
+  emotion: string;
+  connections: number;
+};
+
+type AtlasStats = { total: number; archetypes: number; symbols: number };
+
+function formatRelative(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  if (days < 30) return `${Math.floor(days / 7)} week${days >= 14 ? 's' : ''} ago`;
+  return `${Math.floor(days / 30)} month${days >= 60 ? 's' : ''} ago`;
+}
 
 const DREAM_ATLAS_SAMPLES = [
   { id: 1, title: 'The Tower of Glass', date: '3 days ago', symbols: ['Glass', 'Height', 'Falling'], archetype: 'The Tower', emotion: 'Terror → Liberation', connections: 12 },
@@ -66,6 +87,41 @@ export default function DreamsPage() {
   const [view, setView] = useState<'submit' | 'atlas'>('submit');
   const [analyses, setAnalyses] = useState<Partial<Record<AnalysisLayer, string>>>({});
   const [layerLoading, setLayerLoading] = useState(false);
+  const [atlasDreams, setAtlasDreams] = useState<AtlasCard[] | null>(null);
+  const [atlasStats, setAtlasStats] = useState<AtlasStats | null>(null);
+
+  useEffect(() => {
+    if (view !== 'atlas') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/dreams');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !Array.isArray(data.dreams)) return;
+        type Row = { id: number; title: string; createdAt: string; symbols: string[]; archetype: string; emotions: string };
+        const rows: Row[] = data.dreams;
+        // connections = other dreams sharing an archetype or symbol (computed over the fetched set)
+        const cards: AtlasCard[] = rows.map(row => ({
+          id: row.id,
+          title: row.title,
+          date: formatRelative(row.createdAt),
+          symbols: row.symbols ?? [],
+          archetype: row.archetype,
+          emotion: row.emotions || 'Unrecorded',
+          connections: rows.filter(other =>
+            other.id !== row.id &&
+            (other.archetype === row.archetype || (other.symbols ?? []).some(s => (row.symbols ?? []).includes(s)))
+          ).length,
+        }));
+        if (cards.length > 0) setAtlasDreams(cards);
+        if (data.stats) setAtlasStats(data.stats);
+      } catch {
+        // DB unreachable — atlas falls back to samples
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [view]);
 
   const fetchLayer = async (layer: AnalysisLayer, dream: string): Promise<string> => {
     try {
@@ -91,9 +147,16 @@ export default function DreamsPage() {
     setAnalysisState('analyzing');
     setAnalyses({});
     setActiveLayer('jungian');
+    // persist to the Atlas in parallel with the first analysis
+    const save = fetch('/api/dreams', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, dream: dreamText, emotions }),
+    }).catch(() => null);
     const content = await fetchLayer('jungian', dreamText);
     setAnalyses({ jungian: content });
     setAnalysisState('complete');
+    await save; // the atlas refetches on every open, so no cache invalidation needed
   };
 
   const selectLayer = async (layer: AnalysisLayer) => {
@@ -312,9 +375,9 @@ export default function DreamsPage() {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-4 mb-10">
               {[
-                { label: 'Dreams Recorded', value: '2,847', color: '#6fa8ff' },
-                { label: 'Archetypes Active', value: '94', color: '#ff00cc' },
-                { label: 'Cross-Connections', value: '18,432', color: '#ffd700' },
+                { label: 'Dreams Recorded', value: atlasStats ? atlasStats.total.toLocaleString() : '—', color: '#6fa8ff' },
+                { label: 'Archetypes Active', value: atlasStats ? atlasStats.archetypes.toLocaleString() : '—', color: '#ff00cc' },
+                { label: 'Symbols Indexed', value: atlasStats ? atlasStats.symbols.toLocaleString() : '—', color: '#ffd700' },
               ].map(stat => (
                 <div key={stat.label} className="glass-panel p-4 text-center"
                   style={{ borderColor: `${stat.color}33` }}>
@@ -328,7 +391,7 @@ export default function DreamsPage() {
 
             {/* Dream cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-              {DREAM_ATLAS_SAMPLES.map((dream, i) => (
+              {(atlasDreams ?? DREAM_ATLAS_SAMPLES).map((dream, i) => (
                 <motion.div key={dream.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
