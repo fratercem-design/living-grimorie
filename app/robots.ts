@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
-
-const BASE_URL = process.env.BETTER_AUTH_URL ?? 'https://living-grimorie-production.up.railway.app';
+import { SITE_URL as BASE_URL } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
   return {
