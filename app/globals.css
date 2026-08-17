@@ -39,10 +39,16 @@
    RESET & BASE
    ============================================================ */
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* Must live in @layer base. Tailwind v4 puts its utilities in cascade layers,
+   and unlayered CSS outranks every layer — so an unlayered universal reset
+   silently beat every margin/padding utility on the site (mb-*, py-*, pt-*
+   all computed to 0). Keeping the reset in the base layer lets utilities win. */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 :root {
