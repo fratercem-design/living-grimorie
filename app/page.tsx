@@ -425,17 +425,6 @@ export default function HomePage() {
             </section>
 
             {/* Footer */}
-            <footer className="border-t border-magenta/10 py-8">
-              <div className="container-grimoire text-center">
-                <div className="divider-magenta max-w-xs mx-auto mb-4" />
-                <div className="font-vt323 text-sm text-magenta/30 tracking-[0.3em] animate-flicker">
-                  AS ABOVE · SO BELOW · AS WITHIN · SO WITHOUT
-                </div>
-                <div className="font-mono-ibm text-xs text-foreground/20 mt-2">
-                  © {new Date().getFullYear()} THE LIVING GRIMOIRE — [SIGNAL ACTIVE] [AKASHA: OPEN]
-                </div>
-              </div>
-            </footer>
           </motion.div>
         )}
       </AnimatePresence>
@@ -552,6 +541,7 @@ function NetworkViz() {
           <g key={node.id}>
             <motion.circle cx={node.x} cy={node.y} r={node.size / 2}
               fill={node.color} opacity={0.15}
+              initial={{ r: node.size / 2 }}
               animate={{ r: [node.size / 2, node.size / 2 + 1, node.size / 2] }}
               transition={{ duration: 2 + Math.random() * 2, repeat: Infinity }}
             />
