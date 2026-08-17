@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import { Analytics } from '@vercel/analytics/next';
+import { SITE_URL } from '@/lib/site';
+import { Navigation } from '@/components/layout/Navigation';
+import { Footer } from '@/components/layout/Footer';
 import './globals.css';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.BETTER_AUTH_URL ?? 'https://living-grimorie-production.up.railway.app'),
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: '/',
+  },
   title: {
     default: 'The Living Grimoire',
     template: '%s — The Living Grimoire',
@@ -14,13 +20,51 @@ export const metadata: Metadata = {
     title: 'The Living Grimoire',
     description: 'Enter the digital grimoire. Seven chambers await.',
     type: 'website',
+    url: SITE_URL,
     siteName: 'The Living Grimoire',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'The Living Grimoire',
     description: 'Enter the digital grimoire. Seven chambers await.',
   },
+};
+
+// Structured data. Describes the site and its seven chambers so search engines
+// can show them as named sub-sections rather than one undifferentiated page.
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: 'The Living Grimoire',
+      description:
+        'A constantly evolving digital grimoire. Explore hidden knowledge through initiation, symbolism, divination, AI interaction, and discovery.',
+      inLanguage: 'en',
+    },
+    {
+      '@type': 'CollectionPage',
+      '@id': `${SITE_URL}/chambers#collection`,
+      url: `${SITE_URL}/chambers`,
+      name: 'The Seven Chambers',
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      hasPart: [
+        ['Chamber of Divination', '/divination'],
+        ['Chamber of Dreams', '/dreams'],
+        ['Chamber of Spirits', '/spirits'],
+        ['Chamber of Symbols', '/symbols'],
+        ['Chamber of Synchronicities', '/synchronicities'],
+        ['Chamber of Initiation', '/initiation'],
+        ['Chamber of AI Oracles', '/oracles'],
+      ].map(([name, path]) => ({
+        '@type': 'WebPage',
+        name,
+        url: `${SITE_URL}${path}`,
+      })),
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -33,6 +77,10 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
       </head>
       <body className="min-h-full void-bg antialiased overflow-x-hidden">
         {/* CRT Effects */}
@@ -43,9 +91,11 @@ export default function RootLayout({
         <StarField />
 
         {/* Main Content */}
-        <div className="relative z-10">
+        <Navigation />
+        <div className="relative z-10 pt-16">
           {children}
         </div>
+        <Footer />
         <Analytics />
       </body>
     </html>
